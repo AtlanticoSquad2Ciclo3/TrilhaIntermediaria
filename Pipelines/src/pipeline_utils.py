@@ -52,7 +52,7 @@ def sample_by_class(data, samples_per_class = -1):
   # data_aux = data.copy()
   classes = data['y_true'].unique()
   
-  data_aux = [data.loc[dados['y_true'] == c].sample(samples_per_class) for c in classes]
+  data_aux = [data.loc[data['y_true'] == c].sample(samples_per_class) for c in classes]
   data_aux = pd.concat(data_aux).reset_index(drop=True)
 
   return data_aux
