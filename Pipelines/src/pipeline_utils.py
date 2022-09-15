@@ -48,7 +48,48 @@ def binarizacao_otsu(img, code = cv2.COLOR_BGR2GRAY):
     temp[temp < 255] = 0 
     temp = cv2.bitwise_not(temp) 
     return temp
+def sample_by_class(data, samples_per_class = -1):
+  # data_aux = data.copy()
+  classes = data['y_true'].unique()
+  
+  data_aux = [data.loc[dados['y_true'] == c].sample(samples_per_class) for c in classes]
+  data_aux = pd.concat(data_aux).reset_index(drop=True)
 
+  return data_aux
+def imshow_subplot(img,formato,c,title='',loc='left',fontsize=20):
+  plt.subplot(*formato,c)
+  plt.title(title,loc=loc,fontsize=fontsize)
+  plt.axis('off')
+  plt.imshow(img,cmap='gray')
+def run_pipeline(data, transform = None, steps =[],show_img=True):
+            #  save_path='.'):
+  n_classes = data['y_true'].unique().shape[0]
+  
+  # if save_fig:
+  #   [os.makedirs(os.path.join(save_path,c),exist_ok=True) for c in data['y_true'].unique()]
+  formato = (data.shape[0], len(steps) + 1)
+
+  size_y = 200 
+  size_x = size_y //formato[1]
+
+  size = (size_x ,size_y)
+  plt.rcParams["figure.figsize"] = size
+
+  fontsize=18
+  for i in range(formato[0]):
+    c = 1
+    img_original = data.loc[i,'img']
+    imshow_subplot(img_original,formato=formato,c=c,title=data.loc[i,'y_true'],loc='left',fontsize=fontsize)
+    c+=1
+    t = transform(img_original)
+    for step in steps:
+      img_step = t[step]
+      imshow_subplot(img_step,formato=formato,c=c,title=step,loc='left',fontsize=fontsize)
+
+      c+=1
+   
+    if show_img:
+      plt.show()
 
 class Pipeline2():
     def __init__(self,
