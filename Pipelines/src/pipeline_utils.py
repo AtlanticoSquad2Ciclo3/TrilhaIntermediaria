@@ -21,7 +21,7 @@ def imread(path):
 
 def ingestao(img_root):
     
-    data = glob(os.path.join(path,'**','*.jpg'))
+    data = glob(os.path.join(img_root,'**','*.jpg'))
     data = pd.DataFrame(data, columns=['img'])
     data['y_true'] = data['img'].apply(lambda x: x.split(os.sep)[-2]).astype(str)
     
