@@ -36,7 +36,8 @@ def rgb2gray(img, weights=[]):
         (canalVermelho, canalVerde, canalAzul) = cv2.split(img)
         out = canalVermelho*weights[0] + canalVerde*weights[1] + canalAzul*weights[2] 
         np.clip(out,a_min=0, a_max=255, out=out)
-        return out
+        
+        return (out*255).astype(np.uint8) 
     else:
         return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 def binarizacao_otsu(img, code = cv2.COLOR_BGR2GRAY):
