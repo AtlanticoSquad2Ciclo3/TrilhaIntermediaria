@@ -22,13 +22,13 @@ def imread(path):
 def ingestao(img_root):
     
     data = glob(os.path.join(img_root,'**','*.jpg'))
-    data = pd.DataFrame(data, columns=['img'])
-    data['y_true'] = data['img'].apply(lambda x: x.split(os.sep)[-2]).astype(str)
+    data = pd.DataFrame(data, columns=['img_path'])
+    data['y_true'] = data['img_path'].apply(lambda x: x.split(os.sep)[-1]).astype(str)
+    data['img_name'] = data['img_path'].apply(lambda x: x.split(os.sep)[-1]).astype(str)
     
     # leitura da imagem
-    data['img'] = data['img'].apply(imread)
-   
-    return data
+    data['img'] = data['img_path'].apply(imread)
+    return data.drop('img_path',axis=1)
 def rgb2gray(img, weights=[]):
     if len(weights) == 3:
        
