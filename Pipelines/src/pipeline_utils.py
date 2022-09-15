@@ -37,7 +37,7 @@ def rgb2gray(img, weights=[]):
         out = canalVermelho*weights[0] + canalVerde*weights[1] + canalAzul*weights[2] 
         np.clip(out,a_min=0, a_max=255, out=out)
         
-        return (out*255).astype(np.uint8) 
+        return out.astype(np.uint8) 
     else:
         return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 def binarizacao_otsu(img, code = cv2.COLOR_BGR2GRAY):
@@ -126,7 +126,15 @@ class Pipeline2():
 if __name__ == "__main__":
     path = "/home/eduardo/Downloads/projetos/classificacao_plantas/abies_concolor/12995307070714.jpg"
     # img = imread(path)
-    pipeline2 = Pipeline2()
+    r = -0.333 #@param {type:"number"}
+    g = 0.666 #@param {type:"number"}
+    b = -0.333 #@param {type:"number"}
+    
+    rgb = [r,g,b]
+    rgb = [0.2989,0.5870,0.1140]
+    # rgb = []
+    rgb2grayArgs = {'weights':rgb}
+    pipeline2 = Pipeline2(rgb2grayArgs=rgb2grayArgs)
     dados = ingestao('/home/eduardo/Downloads/projetos/classificacao_plantas')
     data2 = dados['img'].apply(pipeline2.transform)
     # t = p.transform(img)
