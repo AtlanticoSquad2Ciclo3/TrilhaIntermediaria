@@ -58,14 +58,12 @@ class Pipeline2():
                  cannyArgs = {'threshold1':70, 'threshold2':200}
                  ):
         self.steps = ['rgb2gray','bilateralFilter','gaussianBlur','canny','boundingBox','final']
-        self.steps_outputs = dict([(s,"") for s in self.steps])
         self.rgb2grayArgs = rgb2grayArgs
         self.bilateralFilterArgs = bilateralFilterArgs
         self.gaussianBlurArgs = gaussianBlurArgs
         self.cannyArgs = cannyArgs
     
-    def __getitem__(self, step):
-        return self.steps_outputs[step]
+    
     def get_bboxes(self,canny):
         contours,_ = cv2.findContours(canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         contours_poly = []
@@ -90,38 +88,38 @@ class Pipeline2():
         return img_out
     
     def transform(self, img):
+        output = {}
         # grayscale
-        # grayscale
-        self.steps_outputs['rgb2gray'] = rgb2gray(img,**self.rgb2grayArgs)
+        output['rgb2gray'] = rgb2gray(img,**self.rgb2grayArgs)
     
         # filtro bilateral
         if self.bilateralFilterArgs != {}:
-            self.steps_outputs['bilateralFilter'] = cv2.bilateralFilter(self.steps_outputs['rgb2gray'],**self.bilateralFilterArgs)
+            output['bilateralFilter'] = cv2.bilateralFilter(output['rgb2gray'],**self.bilateralFilterArgs)
         else:
-            self.steps_outputs['bilateralFilter'] = self.steps_outputs['rgb2gray']
+            output['bilateralFilter'] = output['rgb2gray']
         
         #gaussian blur
         if self.gaussianBlurArgs != {}:
-            self.steps_outputs['gaussianBlur'] = cv2.GaussianBlur(self.steps_outputs['bilateralFilter'],**self.gaussianBlurArgs)
+            output['gaussianBlur'] = cv2.GaussianBlur(output['bilateralFilter'],**self.gaussianBlurArgs)
         else:
-            self.steps_outputs['gaussianBlur'] = self.steps_outputs['bilateralFilter']
+            output['gaussianBlur'] = output['bilateralFilter']
         
         #canny
         if self.cannyArgs != {}:
-            self.steps_outputs['canny'] = cv2.Canny(self.steps_outputs['gaussianBlur'], **self.cannyArgs)
+            output['canny'] = cv2.Canny(output['gaussianBlur'], **self.cannyArgs)
         else:
-            self.steps_outputs['canny'] = self.steps_outputs['gaussianBlur']
+            output['canny'] = output['gaussianBlur']
         
         
-        self.steps_outputs['contours'],self.steps_outputs['bboxes'] = self.get_bboxes(self.steps_outputs['canny'])
+        output['contours'],output['bboxes'] = self.get_bboxes(output['canny'])
         
         
-        self.steps_outputs['final'] = self.draw_countours(img,
-                                                          self.steps_outputs['contours'],
-                                                          self.steps_outputs['bboxes'])
+        output['final'] = self.draw_countours(img,
+                                                          output['contours'],
+                                                          output['bboxes'])
         
 
-        return self.steps_outputs
+        return output
 
 if __name__ == "__main__":
     path = "/home/eduardo/Downloads/projetos/classificacao_plantas/abies_concolor/12995307070714.jpg"
