@@ -4,7 +4,7 @@ import mahotas
 import matplotlib.pyplot as plt    
 import pandas as pd
 from glob import glob
-
+import os
 import numpy as np
 import argparse
 import random as rng
@@ -29,8 +29,16 @@ def ingestao(img_root):
     data['img'] = data['img'].apply(imread)
    
     return data
-def rgb2gray(img):
-    return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+def rgb2gray(img, weights=[]):
+    if len(weights) == 3:
+       
+    
+        (canalVermelho, canalVerde, canalAzul) = cv2.split(img)
+        out = canalVermelho*weights[0] + canalVerde*weights[1] + canalAzul*weights[2] 
+        np.clip(out,a_min=0, a_max=255, out=out)
+        return out
+    else:
+        return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 def binarizacao_otsu(img, code = cv2.COLOR_BGR2GRAY):
     img1 = cv2.cvtColor(img, code)
     T = mahotas.thresholding.otsu(img1)
@@ -43,12 +51,14 @@ def binarizacao_otsu(img, code = cv2.COLOR_BGR2GRAY):
 
 class Pipeline2():
     def __init__(self,
+                 rgb2grayArgs = {"weights":[]},
                  bilateralFilterArgs={ 'd':3, 'sigmaColor':21,'sigmaSpace':21},
                  gaussianBlurArgs = {'ksize':(7,7),'sigmaX':0},
                  cannyArgs = {'threshold1':70, 'threshold2':200}
                  ):
-        self.steps = ['rgb2gray','bilateralFilter','gaussianBlur','canny','boundingBox']
+        self.steps = ['rgb2gray','bilateralFilter','gaussianBlur','canny','boundingBox','final']
         self.steps_outputs = dict([(s,"") for s in self.steps])
+        self.rgb2grayArgs = rgb2grayArgs
         self.bilateralFilterArgs = bilateralFilterArgs
         self.gaussianBlurArgs = gaussianBlurArgs
         self.cannyArgs = cannyArgs
@@ -68,6 +78,7 @@ class Pipeline2():
             bboxes.append((pt1,pt2))
             
         return  contours_poly ,  bboxes
+    
     def draw_countours(self,img,countours,boxes):
         img_out = img.copy()
         for i,(c,b) in enumerate(zip(countours,boxes)):
@@ -76,10 +87,11 @@ class Pipeline2():
             
             cv2.rectangle(img_out, *b, color, 2)
         return img_out
+    
     def transform(self, img):
         # grayscale
         # grayscale
-        self.steps_outputs['rgb2gray'] = rgb2gray(img)
+        self.steps_outputs['rgb2gray'] = rgb2gray(img,**self.rgb2grayArgs)
     
         # filtro bilateral
         if self.bilateralFilterArgs != {}:
@@ -112,12 +124,17 @@ class Pipeline2():
 
 if __name__ == "__main__":
     path = "/home/eduardo/Downloads/projetos/classificacao_plantas/abies_concolor/12995307070714.jpg"
-    img = imread(path)
-    p = Pipeline2()
-    t = p.transform(img)
-    # _otsu = binarizacao_otsu(img)
-    print(t.keys())
-    show_image(t['final'])
+    # img = imread(path)
+    pipeline2 = Pipeline2()
+    dados = ingestao('/home/eduardo/Downloads/projetos/classificacao_plantas')
+    data2 = dados['img'].apply(pipeline2.transform)
+    # t = p.transform(img)
+    # # _otsu = binarizacao_otsu(img)
+    # print(t.keys())
+    i = 110
+    show_image(data2.iloc[i]['rgb2gray'])
+    show_image(data2.iloc[i]['bilateralFilter'])
+    show_image(data2.iloc[i]['gaussianBlur'])
     show_image(t['contours'])
     show_image(p['bilateralFilter'])
     print
