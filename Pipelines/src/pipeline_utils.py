@@ -23,7 +23,7 @@ def ingestao(img_root):
     
     data = glob(os.path.join(img_root,'**','*.jpg'))
     data = pd.DataFrame(data, columns=['img_path'])
-    data['y_true'] = data['img_path'].apply(lambda x: x.split(os.sep)[-1]).astype(str)
+    data['y_true'] = data['img_path'].apply(lambda x: x.split(os.sep)[-2]).astype(str)
     data['img_name'] = data['img_path'].apply(lambda x: x.split(os.sep)[-1]).astype(str)
     
     # leitura da imagem
