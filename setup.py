@@ -1,3 +1,3 @@
 from setuptools import setup, find_packages
 
-setup(name='pipeline_utils', version='1.0', packages=find_packages())
+setup(name='Pipelines', version='1.0', packages=find_packages())
