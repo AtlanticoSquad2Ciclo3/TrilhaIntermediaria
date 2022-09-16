@@ -119,16 +119,12 @@ class Pipeline1():
         return seg_img
 
     def custom_mask(self,hsvImg,customMaskArgs):
-        mask1 = hsvImg[:,:,0] > customMaskArgs['mask1']
-        mask2 = hsvImg[:,:,0] < customMaskArgs['mask2']
-        mask3 = hsvImg[:,:,1] > customMaskArgs['mask3']
+        mask1 = hsvImg[:,:,0] > (customMaskArgs['mask1'] * 255)
+        mask2 = hsvImg[:,:,0] < (customMaskArgs['mask2'] * 255)
+        mask3 = hsvImg[:,:,1] > (customMaskArgs['mask3'] * 255)
         mask = mask1*mask2*mask3
-        out = hsvImg.copy()
-        #Mask Aplication
-        out[:,:,0] *= mask
-        out[:,:,1] *= mask
-        out[:,:,2] *= mask 
-        return out
+        
+        return np.stack([mask]*3, axis=2) * hsvImg
     
     def otsu_filter(self, hsvImg):
         imgAux = cv2.cvtColor(hsvImg, cv2.COLOR_HSV2RGB)
