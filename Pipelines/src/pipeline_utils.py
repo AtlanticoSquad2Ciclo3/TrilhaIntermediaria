@@ -98,9 +98,12 @@ class Pipeline1():
                                'criteria':(cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 100, 0.85),
                                'attempts':10,
                                'flags':cv2.KMEANS_RANDOM_CENTERS},
-                 customMaskArgs={'mask1':0.2, 
-                                 'mask2':0.5,
-                                 'mask3':0.19}
+                 customMaskArgs={'h_lower':0.0,
+                                 'h_upper':1,
+                                 's_lower':0.,
+                                 's_upper':1.0,
+                                 'v_lower':0,
+                                 'v_upper':1.0}
                  ):
         self.steps = ['kmeans','rgb2hsv','customMask','otsuFilter','final']
         self.kmeansArgs = kmeansArgs
@@ -119,11 +122,14 @@ class Pipeline1():
         return seg_img
 
     def custom_mask(self,hsvImg,customMaskArgs):
-        mask1 = hsvImg[:,:,0] > (customMaskArgs['mask1'] * 255)
-        mask2 = hsvImg[:,:,0] < (customMaskArgs['mask2'] * 255)
-        mask3 = hsvImg[:,:,1] > (customMaskArgs['mask3'] * 255)
-        mask = mask1*mask2*mask3
-        
+        h_mask_l = hsvImg[:,:,0] >= (customMaskArgs['h_lower'] * 255)
+        h_mask_u = hsvImg[:,:,0] <= (customMaskArgs['h_upper'] * 255)
+        s_mask_l = hsvImg[:,:,1] >= (customMaskArgs['s_lower'] * 255)
+        s_mask_u = hsvImg[:,:,1] <= (customMaskArgs['s_upper'] * 255)
+        v_mask_l = hsvImg[:,:,2] >= (customMaskArgs['v_lower'] * 255)
+        v_mask_u = hsvImg[:,:,2] <= (customMaskArgs['v_upper'] * 255)
+        mask = h_mask_l*h_mask_u*s_mask_l*s_mask_u*v_mask_l*v_mask_u
+        print(mask.max())
         return np.stack([mask]*3, axis=2) * hsvImg
     
     def otsu_filter(self, hsvImg):
