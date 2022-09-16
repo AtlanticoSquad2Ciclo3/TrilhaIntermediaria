@@ -126,7 +126,6 @@ class Pipeline1():
         v_mask_l = hsvImg[:,:,2] >= (customMaskArgs['v_lower'] * 255)
         v_mask_u = hsvImg[:,:,2] <= (customMaskArgs['v_upper'] * 255)
         mask = h_mask_l*h_mask_u*s_mask_l*s_mask_u*v_mask_l*v_mask_u
-        print(mask.max())
         return np.stack([mask]*3, axis=2) * hsvImg
     
     def otsu_filter(self, hsvImg):
