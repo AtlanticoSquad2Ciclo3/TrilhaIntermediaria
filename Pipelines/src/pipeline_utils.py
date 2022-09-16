@@ -65,10 +65,8 @@ def run_pipeline(data, transform = None, steps =[],show_img=True,cmaps = []):
             #  save_path='.'):
  
   formato = (data.shape[0], len(steps) + 1)
-
   size_y = 200 
   size_x = size_y //formato[1]
-
   size = (size_x ,size_y)
   plt.rcParams["figure.figsize"] = size
 
@@ -227,7 +225,35 @@ class Pipeline2():
         
 
         return output
+class Pipeline3():
+    def __init__(self,
+                 rgb2grayArgs = {"weights":[]},
+                 gaussianBlurArgs = {'ksize':(7,7),'sigmaX':0},
+                 adaptiveThresholdArgs = {'maxValue':255, 
+                                          'adaptiveMethod':cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
+                                          'thresholdType':cv2.THRESH_BINARY_INV, 
+                                          'blockSize':21, 
+                                          'C':5}
+                 ):
+        self.steps = ['rgb2grayArgs','gaussianBlurArgs','adaptiveThresholdArgs','final']
+        self.rgb2grayArgs = rgb2grayArgs
+        self.gaussianBlurArgs = gaussianBlurArgs
+        self.adaptiveThresholdArgs = adaptiveThresholdArgs
+    
+       
+    def transform(self, img):
+        output = {}
+        # grayscale
+        output['rgb2gray'] = rgb2gray(img,**self.rgb2grayArgs)
+    
+        #gaussian blur
+        output['gaussianBlur'] = cv2.GaussianBlur(output['rgb2gray'],**self.gaussianBlurArgs)
+        
+        # adaptiveThreshold
+        output['adaptiveThreshold'] = cv2.adaptiveThreshold(output['gaussianBlur'], **self.adaptiveThresholdArgs)
+        
 
+        return output
 if __name__ == "__main__":
     path = "/home/eduardo/Downloads/projetos/classificacao_plantas/abies_concolor/12995307070714.jpg"
    
