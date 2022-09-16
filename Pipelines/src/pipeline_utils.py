@@ -252,7 +252,7 @@ class Pipeline3():
         # adaptiveThreshold
         output['adaptiveThreshold'] = cv2.adaptiveThreshold(output['gaussianBlur'], **self.adaptiveThresholdArgs)
 
-        output['final'] = np.stack([output['adaptiveThreshold']]*3, axis=2) * img
+        output['final'] = np.stack([output['adaptiveThreshold']>0]*3, axis=2) * img
 
         return output
 if __name__ == "__main__":
@@ -264,15 +264,15 @@ if __name__ == "__main__":
                   'criteria':(cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 100, 0.85),
                   'attempts':10,
                   'flags':cv2.KMEANS_RANDOM_CENTERS}
-    pipeline1 = Pipeline1(kmeansArgs = kmeansArgs)
+    pipeline1 = Pipeline3()
     dados = ingestao('/home/eduardo/Downloads/projetos/classificacao_plantas')
     amelanchier_canadensis = glob("/home/eduardo/Downloads/projetos/classificacao_plantas/amelanchier_canadensis/*.jpg")
     img = imread(amelanchier_canadensis[0])
     i = 110
     out = pipeline1.transform(img)
     show_image(img)
-    show_image(out['kmeans'])
-    show_image(out['otsuFilter'])
+    show_image(out['rgb2gray'])
+    show_image(out['adaptiveThreshold'])
     show_image(out['final'])
     print
     
