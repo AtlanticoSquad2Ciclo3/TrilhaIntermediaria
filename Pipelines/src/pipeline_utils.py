@@ -8,7 +8,7 @@ import os
 import numpy as np
 import argparse
 import random as rng
-
+from skimage.filters import threshold_otsu
 def show_image(image, title='Image', cmap_type='gray'):
     plt.imshow(image, cmap=cmap_type)
     plt.title(title)
@@ -90,7 +90,75 @@ def run_pipeline(data, transform = None, steps =[],show_img=True):
    
     if show_img:
       plt.show()
+class Pipeline1():
+    def __init__(self,
+                 kmeansArgs = {'K':10,
+                               'bestLabels':None,
+                               # Define criteria = ( type, max_iter = 10 , epsilon = 1.0 )
+                               'criteria':(cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 100, 0.85),
+                               'attempts':10,
+                               'flags':cv2.KMEANS_RANDOM_CENTERS},
+                 customMaskArgs={'mask1':0.2, 
+                                 'mask2':0.5,
+                                 'mask3':0.19}
+                 ):
+        self.steps = ['kmeans','rgb2hsv','customMask','otsuFilter','final']
+        self.kmeansArgs = kmeansArgs
+        self.customMaskArgs = customMaskArgs
+       
+    def kmeans(self,img,kmeansArgs):
+        
+        pixel_vals = img.reshape((-1,3))
+        pixel_vals = np.float32(pixel_vals)
+        retval, labels, centers = cv2.kmeans(pixel_vals, **kmeansArgs)
+        
+        centers = np.uint8(centers)
+        segmented_data = centers[labels.flatten()]
+        
+        seg_img = segmented_data.reshape((img.shape))
+        return seg_img
 
+    def custom_mask(self,hsvImg,customMaskArgs):
+        mask1 = hsvImg[:,:,0] > customMaskArgs['mask1']
+        mask2 = hsvImg[:,:,0] < customMaskArgs['mask2']
+        mask3 = hsvImg[:,:,1] > customMaskArgs['mask3']
+        mask = mask1*mask2*mask3
+        out = hsvImg.copy()
+        #Mask Aplication
+        out[:,:,0] *= mask
+        out[:,:,1] *= mask
+        out[:,:,2] *= mask 
+        return out
+    
+    def otsu_filter(self, hsvImg):
+        imgAux = cv2.cvtColor(hsvImg, cv2.COLOR_HSV2RGB)
+        imgAux = cv2.cvtColor(hsvImg, cv2.COLOR_RGB2GRAY)
+        lt = threshold_otsu(imgAux)
+
+        return imgAux > lt
+    
+    def transform(self, img):
+        output = {}
+        # kmeans
+        output['kmeans'] = self.kmeans(img,self.kmeansArgs)
+
+        # hsv
+        output['hsv'] = cv2.cvtColor(output['kmeans'], cv2.COLOR_RGB2HSV)
+        
+        # mask
+        output['customMask'] = self.custom_mask(output['hsv'],self.customMaskArgs)
+        
+        #otsu
+        output['otsuFilter'] = self.otsu_filter(output['customMask'])
+        
+        
+        # output['contours'],output['bboxes'] = self.get_bboxes(output['canny'])
+        
+        output['final'] = np.stack([output['otsuFilter']]*3, axis=2) * img
+
+        
+
+        return output
 class Pipeline2():
     def __init__(self,
                  rgb2grayArgs = {"weights":[]},
@@ -164,26 +232,22 @@ class Pipeline2():
 
 if __name__ == "__main__":
     path = "/home/eduardo/Downloads/projetos/classificacao_plantas/abies_concolor/12995307070714.jpg"
-    # img = imread(path)
-    r = -0.333 #@param {type:"number"}
-    g = 0.666 #@param {type:"number"}
-    b = -0.333 #@param {type:"number"}
-    
-    rgb = [r,g,b]
-    rgb = [0.2989,0.5870,0.1140]
-    # rgb = []
-    rgb2grayArgs = {'weights':rgb}
-    pipeline2 = Pipeline2(rgb2grayArgs=rgb2grayArgs)
+   
+    kmeansArgs = {'K':10,
+                  'bestLabels':None,
+                  # Define criteria = ( type, max_iter = 10 , epsilon = 1.0 )
+                  'criteria':(cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 100, 0.85),
+                  'attempts':10,
+                  'flags':cv2.KMEANS_RANDOM_CENTERS}
+    pipeline1 = Pipeline1(kmeansArgs = kmeansArgs)
     dados = ingestao('/home/eduardo/Downloads/projetos/classificacao_plantas')
-    data2 = dados['img'].apply(pipeline2.transform)
-    # t = p.transform(img)
-    # # _otsu = binarizacao_otsu(img)
-    # print(t.keys())
+    amelanchier_canadensis = glob("/home/eduardo/Downloads/projetos/classificacao_plantas/amelanchier_canadensis/*.jpg")
+    img = imread(amelanchier_canadensis[0])
     i = 110
-    show_image(data2.iloc[i]['rgb2gray'])
-    show_image(data2.iloc[i]['bilateralFilter'])
-    show_image(data2.iloc[i]['gaussianBlur'])
-    show_image(t['contours'])
-    show_image(p['bilateralFilter'])
+    out = pipeline1.transform(img)
+    show_image(img)
+    show_image(out['kmeans'])
+    show_image(out['otsuFilter'])
+    show_image(out['final'])
     print
     
