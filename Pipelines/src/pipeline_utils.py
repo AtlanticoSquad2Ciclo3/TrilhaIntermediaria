@@ -79,7 +79,7 @@ def run_pipeline(data, transform = None, steps =[],show_img=True,cmaps = []):
     imshow_subplot(img_original,formato=formato,c=c,title=data.loc[i,'y_true'],loc='left',fontsize=fontsize)
     c+=1
     t = transform(img_original)
-    for step,cmap in (steps,cmaps):
+    for step,cmap in zip(steps,cmaps):
       img_step = t[step]
       imshow_subplot(img_step,formato=formato,c=c,title=step,loc='left',fontsize=fontsize,cmap=cmap)
 
