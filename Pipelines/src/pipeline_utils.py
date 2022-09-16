@@ -251,7 +251,8 @@ class Pipeline3():
         
         # adaptiveThreshold
         output['adaptiveThreshold'] = cv2.adaptiveThreshold(output['gaussianBlur'], **self.adaptiveThresholdArgs)
-        
+
+        output['final'] = np.stack([output['adaptiveThreshold']]*3, axis=2) * img
 
         return output
 if __name__ == "__main__":
