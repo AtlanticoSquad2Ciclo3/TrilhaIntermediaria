@@ -250,7 +250,7 @@ class Pipeline3():
         output['medianBlur'] = cv2.medianBlur(output['rgb2gray'],**self.medianBlurArgs)
         
         # adaptiveThreshold
-        output['adaptiveThreshold'] = cv2.adaptiveThreshold(output['gaussianBlur'], **self.adaptiveThresholdArgs)
+        output['adaptiveThreshold'] = cv2.adaptiveThreshold(output['medianBlur'], **self.adaptiveThresholdArgs)
 
         output['final'] = np.stack([output['adaptiveThreshold']>0]*3, axis=2) * img
 
