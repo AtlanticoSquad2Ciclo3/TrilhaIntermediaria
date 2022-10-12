@@ -228,16 +228,16 @@ class Pipeline2():
 class Pipeline3():
     def __init__(self,
                  rgb2grayArgs = {"weights":[]},
-                 gaussianBlurArgs = {'ksize':(7,7),'sigmaX':0},
+                 medianBlurArgs = {'ksize':5},
                  adaptiveThresholdArgs = {'maxValue':255, 
                                           'adaptiveMethod':cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
                                           'thresholdType':cv2.THRESH_BINARY_INV, 
                                           'blockSize':21, 
                                           'C':5}
                  ):
-        self.steps = ['rgb2grayArgs','gaussianBlurArgs','adaptiveThresholdArgs','final']
+        self.steps = ['rgb2gray','medianBlur','adaptiveThreshold','final']
         self.rgb2grayArgs = rgb2grayArgs
-        self.gaussianBlurArgs = gaussianBlurArgs
+        self.medianBlurArgs = medianBlurArgs
         self.adaptiveThresholdArgs = adaptiveThresholdArgs
     
        
@@ -247,7 +247,7 @@ class Pipeline3():
         output['rgb2gray'] = rgb2gray(img,**self.rgb2grayArgs)
     
         #gaussian blur
-        output['gaussianBlur'] = cv2.GaussianBlur(output['rgb2gray'],**self.gaussianBlurArgs)
+        output['medianBlur'] = cv2.medianBlur(output['rgb2gray'],**self.medianBlurArgs)
         
         # adaptiveThreshold
         output['adaptiveThreshold'] = cv2.adaptiveThreshold(output['gaussianBlur'], **self.adaptiveThresholdArgs)
@@ -256,23 +256,5 @@ class Pipeline3():
 
         return output
 if __name__ == "__main__":
-    path = "/home/eduardo/Downloads/projetos/classificacao_plantas/abies_concolor/12995307070714.jpg"
-   
-    kmeansArgs = {'K':10,
-                  'bestLabels':None,
-                  # Define criteria = ( type, max_iter = 10 , epsilon = 1.0 )
-                  'criteria':(cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 100, 0.85),
-                  'attempts':10,
-                  'flags':cv2.KMEANS_RANDOM_CENTERS}
-    pipeline1 = Pipeline3()
-    dados = ingestao('/home/eduardo/Downloads/projetos/classificacao_plantas')
-    amelanchier_canadensis = glob("/home/eduardo/Downloads/projetos/classificacao_plantas/amelanchier_canadensis/*.jpg")
-    img = imread(amelanchier_canadensis[0])
-    i = 110
-    out = pipeline1.transform(img)
-    show_image(img)
-    show_image(out['rgb2gray'])
-    show_image(out['adaptiveThreshold'])
-    show_image(out['final'])
-    print
-    
+    import os
+
