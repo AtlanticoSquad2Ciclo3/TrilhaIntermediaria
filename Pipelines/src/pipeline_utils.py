@@ -18,7 +18,19 @@ def show_image(image, title='Image', cmap_type='gray'):
 def imread(path):
     img =  cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)
     return img
-
+def orientacao(img_size):
+    h,w,_ = img_size
+    return 'horizontal' if w > h else 'vertical'
+def pad_image(img,max_h,max_w):
+    h,w,_ = img.shape
+    top = (max_h - h) // 2
+    right = (max_w - w) // 2
+    bottom = top + 1*(((max_h - h) % 2) != 0 )
+    left = right + 1*(((max_w - w) % 2) != 0 )
+    if top > 0 or right > 0:
+        return cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_REPLICATE)    
+    else: 
+        return img
 def ingestao(img_root):
     
     data = glob(os.path.join(img_root,'**','*.jpg'))
@@ -28,7 +40,17 @@ def ingestao(img_root):
     
     # leitura da imagem
     data['img'] = data['img_path'].apply(imread)
-    return data.drop('img_path',axis=1)
+    data['img_size'] = data['img'].apply(lambda x: x.shape)
+    data['orientacao'] = data['img_size'].apply(orientacao)
+    orientacao_escolhida = "vertical"
+    data.loc[data['orientacao'] != orientacao_escolhida,'img'] = data.loc[data['orientacao'] != orientacao_escolhida,'img'].apply(lambda x: cv2.rotate(x, cv2.ROTATE_90_CLOCKWISE))
+    data['img_size'] = data['img'].apply(lambda x: x.shape)
+    data['orientacao'] = data['img_size'].apply(orientacao)
+    max_h = data['img_size'].apply(lambda x: x[0]).max()
+    max_w = data['img_size'].apply(lambda x: x[1]).max()
+    data['img'] = data['img'].apply(lambda x: pad_image(x,max_h,max_w))
+    data['img_size'] = data['img'].apply(lambda x: x.shape)
+    return data.drop(['img_path','orientacao','img_size'],axis=1)
 def rgb2gray(img, weights=[]):
     if len(weights) == 3:
        
@@ -256,7 +278,6 @@ class Pipeline3():
 
         return output
 if __name__ == "__main__":
-    import h2o
-    h2o.init()
-    h2o.demo("glm")
-    print
+    p = "/home/eduardo/Downloads/projetos/classificacao_plantas"
+    dados = ingestao(p)
+
