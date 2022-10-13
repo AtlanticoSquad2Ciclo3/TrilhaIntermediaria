@@ -28,3 +28,4 @@ torchaudio
 torchvision
 typing_extensions
 urllib3
+pycaret
