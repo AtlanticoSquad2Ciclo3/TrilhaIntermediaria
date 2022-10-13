@@ -1,4 +1,4 @@
-pycaret
+auto-sklearn
 opencv-python
 scikit-image
 mahotas
