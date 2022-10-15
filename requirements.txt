@@ -1,5 +1,8 @@
 scikit-learn
-auto-sklearn
+# auto-sklearn
 opencv-python
 scikit-image
 mahotas
+matplotlib
+pandas 
+numpy

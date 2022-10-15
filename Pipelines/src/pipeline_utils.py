@@ -31,7 +31,7 @@ def pad_image(img,max_h,max_w):
         return cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_REPLICATE)    
     else: 
         return img
-def ingestao(img_root):
+def ingestao(img_root, resize = 1.0):
     
     data = glob(os.path.join(img_root,'**','*.jpg'))
     data = pd.DataFrame(data, columns=['img_path'])
@@ -50,6 +50,9 @@ def ingestao(img_root):
     max_w = data['img_size'].apply(lambda x: x[1]).max()
     data['img'] = data['img'].apply(lambda x: pad_image(x,max_h,max_w))
     data['img_size'] = data['img'].apply(lambda x: x.shape)
+    if resize != 1:
+        dim = (int(max_h*resize),int(max_w*resize))
+        data['img'] = data['img'].apply(lambda x: cv2.resize(x, dim, interpolation = cv2.INTER_AREA))
     return data.drop(['img_path','orientacao','img_size'],axis=1)
 def rgb2gray(img, weights=[]):
     if len(weights) == 3:
