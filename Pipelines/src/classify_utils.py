@@ -13,7 +13,7 @@ from sklearn.preprocessing import MaxAbsScaler
 import time
 import pandas as pd
 
-from pipeline_utils import Pipeline1
+from pipeline_utils import Pipeline1, Pipeline3
 def generate_svm_model(train_data,label_train_data,test_data):
     clf = svm.SVC(kernel='linear')
     clf.fit(train_data, label_train_data)
@@ -82,14 +82,14 @@ def get_metrics(resultados,tempos, y_test):
     
     return pd.DataFrame(dict_out).transpose()  
 
-def baseline( X_train,X_test,y_train,y_test):
+def baseline(X_train,X_test,y_train,y_test):
     X_train_1 = np.stack(X_train.copy().apply(lambda x: x.reshape(-1)).values).astype(np.float32)/255
     X_test_1  = np.stack(X_test.copy().apply(lambda x: x.reshape(-1)).values).astype(np.float32)/255
     resultados,tempos = gen_classifiers(X_train_1, y_train, X_test_1)
     return X_train_1,X_test_1,get_metrics(resultados,tempos, y_test)
 
 def get_contours_param(contour):
-    contour_area, contour_perimeter, contour_convex_area, eccentricity = 0, 0, 0, 0
+    contour_area, contour_perimeter, contour_convex_area, contour_minor_axis_length, eccentricity = 0, 0, 0, 0, 0
     max_area = 0
     for c in contour:
       contour_area += c.filled_area
@@ -97,16 +97,17 @@ def get_contours_param(contour):
       contour_convex_area += c.convex_area
       if c.filled_area >= max_area:
         eccentricity = c.eccentricity
+        contour_minor_axis_length = c.minor_axis_length
         max_area = c.filled_area
-    return contour_area, contour_perimeter, contour_convex_area, eccentricity
+    return contour_area, contour_perimeter, contour_convex_area, contour_minor_axis_length, eccentricity
 
 def _feature_extraction_pipeline1(img):
     regions = regionprops(np.uint8(img))
-    area, perimeter, convex_area, eccentricity = get_contours_param(regions)
-    return area, perimeter, convex_area, eccentricity
+    area, perimeter, convex_area,contour_minor_axis_length, eccentricity = get_contours_param(regions)
+    return area, perimeter, convex_area,contour_minor_axis_length, eccentricity
 
 def Pipeline1Classifier( X_train,X_test,y_train,y_test):
-    features = ['area', 'perimeter', 'convex_area', 'eccentricity']
+    features = ['area', 'perimeter', 'convex_area', 'minor_axis_length', 'eccentricity']
     transform = Pipeline1().transform
     X_train_1 = X_train.copy().apply(lambda x: transform(x)['otsuFilter']).apply(_feature_extraction_pipeline1)
     X_test_1  = X_test.copy().apply(lambda x: transform(x)['otsuFilter']).apply(_feature_extraction_pipeline1)
@@ -124,7 +125,25 @@ def Pipeline1Classifier( X_train,X_test,y_train,y_test):
     
     resultados,tempos = gen_classifiers(X_train_1, y_train, X_test_1)
     return X_train_1,X_test_1, get_metrics(resultados,tempos,y_test)
+def Pipeline3Classifier(X_train,X_test,y_train,y_test):
+    features = ['area', 'perimeter', 'convex_area', 'minor_axis_length', 'eccentricity']
+    transform = Pipeline3().transform
+    X_train_1 = X_train.copy().apply(lambda x: transform(x)['adaptiveThreshold']).apply(_feature_extraction_pipeline1)
+    X_test_1  = X_test.copy().apply(lambda x: transform(x)['adaptiveThreshold']).apply(_feature_extraction_pipeline1)
     
+    X_train_1 = X_train_1.apply(pd.Series)
+    X_train_1.columns = features
+    
+    X_test_1 = X_test_1.apply(pd.Series)
+    X_test_1.columns = features
+    
+    norm = MaxAbsScaler()
+    X_train_1 = norm.fit_transform(X_train_1)
+    X_test_1 = norm.fit_transform(X_test_1)
+    
+    
+    resultados,tempos = gen_classifiers(X_train_1, y_train, X_test_1)
+    return X_train_1,X_test_1, get_metrics(resultados,tempos,y_test)    
     print
 if __name__ == "__main__":
     from pipeline_utils import ingestao
@@ -134,6 +153,7 @@ if __name__ == "__main__":
     X, y = dados['img'], dados['y_true']
     X_train,X_test,y_train,y_test = train_test_split(X,y,test_size=0.3, stratify=y, random_state=1337)
     
-    X_train_1,X_test_1,out = Pipeline1Classifier(X_train,X_test,y_train,y_test)
+    X_train_1,X_test_1,out = Pipeline3Classifier(X_train,X_test,y_train,y_test)
     
     print(out)
+    print
