@@ -12,6 +12,7 @@ from skimage.filters import threshold_otsu
 from sklearn.preprocessing import MaxAbsScaler
 import time
 import pandas as pd
+import numpy as np
 
 from pipeline_utils import Pipeline1, Pipeline3
 def generate_svm_model(train_data,label_train_data,test_data):
@@ -147,7 +148,6 @@ def Pipeline3Classifier(X_train,X_test,y_train,y_test):
     print
 if __name__ == "__main__":
     from pipeline_utils import ingestao
-    import numpy as np
     p = "/home/eduardo/Downloads/projetos/classificacao_plantas"
     dados = ingestao(p,resize=1.0)  
     X, y = dados['img'], dados['y_true']
